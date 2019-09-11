@@ -1,13 +1,17 @@
-## Script Helper
+## Script Helper für Jérôme's 7.5" ePaper Display Projekt [HB-Dis-EP-75BW](https://github.com/jp112sdl/HB-Dis-EP-75BW)
 
-Mit dem Script Helper kann man aus HomeMatic Skripten heraus Texte an das Display senden.  
-  
+Mit dem Script Helper kann man aus HomeMatic Skripten heraus Texte an das Display senden.<br>
+<br>
 - Installation:
 ```
-Download via SSH auf der CCU  
-wget https://raw.githubusercontent.com/venice1200/SmartHome/master/HB-Dis-EP-75BW/epaper75.tcl  
+Download via SSH auf die CCU in den Ordner /usr/local/addons mit dem Befehl:
+wget -O /usr/local/addons/epaper75.tcl https://raw.githubusercontent.com/venice1200/SmartHome/master/HB-Dis-EP-75BW/epaper75.tcl  
 ```
-Auszug aus dem Script:
+**Info**<br>
+Es gibt (noch) keinerlei Bereichsprüfungen innerhalb des TCL Skripts.<br>
+Deshalb kann es durchaus passieren das was schief geht :-) falls falsche Werte übergeben werden.<br>
+<br>
+Auszug aus dem Script:<br>
 ```
 epaper75.tcl 
 
@@ -21,8 +25,9 @@ Give Credit, NonCommercial, ShareAlike
 
 Many many Thanks to Jérôme, Tom Major & PaPa
 
-It'y my first TCL script, please help to make it better and easier
+It'y my first TCL script, please help to me make it better and easier
 Tested with Raspberrymatic 3.47.15.20190831
+
 The script need to be downloaded to /usr/local/addons on the CCU
 
 Usage from comand line:
