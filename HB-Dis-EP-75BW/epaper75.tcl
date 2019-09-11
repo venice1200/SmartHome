@@ -13,7 +13,7 @@
 
 # Many many Thanks to Jérôme, Tom Major & PaPa
 #
-# It'y my first TCL script, please help to make it better and easier
+# It'y my first TCL script (modification), please help to make it better and easier
 # Tested with Raspberrymatic 3.47.15.20190831
 # The script need to be downloaded to /usr/local/addons on the CCU
 #
