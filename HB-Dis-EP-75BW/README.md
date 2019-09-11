@@ -1,6 +1,13 @@
 ## Script Helper
 
-- Mit dem Script Helper kann man aus HomeMatic Skripten heraus Texte an das Display senden.
+Mit dem Script Helper kann man aus HomeMatic Skripten heraus Texte an das Display senden.  
+  
+- Installation:
+```
+Download via SSH auf der CCU  
+wget https://raw.githubusercontent.com/venice1200/SmartHome/master/HB-Dis-EP-75BW/epaper75.tcl  
+```
+Auszug aus dem Script:
 ```
 epaper75.tcl 
 
