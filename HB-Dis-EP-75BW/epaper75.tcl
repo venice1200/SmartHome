@@ -1,16 +1,16 @@
 #!/bin/tclsh
 #
 # =================================================
-# epaper75.tcl 
-# based on epaper42.tcl by Tom Major 2019/05  (Creative Commons)
-#
-# HB-Dis-EP-75BW script helper 
+# epaper75.tcl, HB-Dis-EP-75BW script helper 
 # Version 0.1
 # 2019-09-11 lame (Creative Commons)
 # https://creativecommons.org/licenses/by-nc-sa/4.0/
 # You are free to Share & Adapt under the following terms:
 # Give Credit, NonCommercial, ShareAlike
-
+#
+# Based on epaper42.tcl by Tom Major 2019/05  (Creative Commons)
+# See https://github.com/TomMajor/SmartHome/tree/master/HB-Dis-EP-42BW/Script_Helper
+#
 # Many many Thanks to Jérôme, Tom Major & PaPa
 #
 # It'y my first TCL script (modification), please help to make it better and easier
