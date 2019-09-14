@@ -113,7 +113,7 @@ Auszug aus dem Script:<br>
 # Flags = 14 = 8+4+2 = both lines centered, second line bold
 #
 # -Clear
-# string displayCmd = "JPDISEP750 /7 0 @c254 @c254 0"
+# string displayCmd = "JPDISEP750 /7 0 @c00 @c00 0"
 # Cell 7, clear Icon (0) and both text lines (@c00)
 #
 ```
