@@ -2,7 +2,7 @@
 #
 # =================================================
 # epaper75.tcl, HB-Dis-EP-75BW script helper 
-# Version 0.11
+# Version 0.13
 # 2019-09-11 lame (Creative Commons)
 # https://creativecommons.org/licenses/by-nc-sa/4.0/
 # You are free to Share & Adapt under the following terms:
@@ -11,12 +11,20 @@
 # Based on epaper42.tcl by Tom Major 2019/05  (Creative Commons)
 # See https://github.com/TomMajor/SmartHome/tree/master/HB-Dis-EP-42BW/Script_Helper
 #
-# Many many Thanks to Jérôme, Tom Major & PaPa
+# Many many Thanks to Jérôme, Tom Major, pa-pa & the Community
 #
 # It'y my first TCL script (modification), please help me to make it better and easier
 # Tested with Raspberrymatic 3.47.15.20190831
 #
-# The script need to be downloaded to /usr/local/addons on the CCU as the below CMD_EXEC command starts from there 
+# The script need to be downloaded to /usr/local/addons on the CCU as the below CMD_EXEC command starts from there
+#
+# Debugging Options are on the Top of the Script
+# If you like to enable submitting to the display choose "gSubmit 1"
+# If you like to disable submitting to the display choose "gSubmit 0"
+#
+# If you like to disbale debugging choose "gDebug" 0
+# If you like to enable debugging to file "gDebugFile" choose "gDebug" 1
+#
 #
 # Put the Display Content in an Variable, here "displayCMD", and run the helper script with CUxD Exec to send the data to the Display
 # dom.GetObject("CUxD.CUX2801001:1.CMD_EXEC").State("tclsh /usr/local/addons/epaper75.tcl " # displayCmd);
@@ -39,6 +47,7 @@
 #
 # icon  : 1..30 as defined within Sketch
 #         !! Needs to be set at least with the 0 value
+#         !! If you set the Icon to 0 an existing icon we be cleared
 #
 # text1 : Line 1 possible mix with fixtext
 #         !! Needs to be set at least with ' ' (one space)
@@ -48,19 +57,26 @@
 #         !! Needs to be set at least with ' ' (one space)
 #         !! Text with spaces needs to be between '' like 'space text'
 #
-# Fixtexts
-# Add @t01..@t32 for the fixtexts 1..32 defined at device settings
+# Specials:
+# -Fixtexts @t:
+# Add @t01..@t32 within the text for adding fixtexts 1..32 defined at device settings
+#
+# -Commands @c:
+# Use @c00 as Text and existing Text Line will be cleared (see last example)
 #
 # Flags: Decimal value containing bits for bold & centererd text and right aligned icon
-#         !! Needs to be set at least with the 0 value
-# Decimal Value which stands for
-# Bit    4 3 2 1 0
-# Value 16 8 4 2 1
-#        | | | | \-> if set to 1 Text Line 1 = bold, if set to 0 text is normal
-#        | | | \---> if set to 1 Text Line 2 = bold, if set to 0 text is normal
-#        | | \-----> if set to 1 Text Line 1 = centered, if set to 0 aligned like the icon
-#        | \-------> if set to 1 Text Line 2 = centered, if set to 0 aligned like the icon
-#        \---------> if set to 1 Icon & Text right aligned, if set to 0 left aligned
+#         !! Flags needs to be set at least with the 0 value
+#
+# The Bits are standing for:
+# Bit 0 Value 1:   If set to 1 Text Line 1 = bold, if set to 0 text is normal
+# Bit 1 Value 2:   If set to 1 Text Line 2 = bold, if set to 0 text is normal
+# Bit 2 Value 4:   If set to 1 Text Line 1 = centered, if set to 0 aligned like the icon
+# Bit 3 Value 8:   If set to 1 Text Line 2 = centered, if set to 0 aligned like the icon
+# Bit 4 Value 16:  If set to 1 Icon & Text right aligned, if set to 0 left aligned
+#
+# Bit 5 Value 32:  Free to use
+# Bit 6 Value 64:  Free to use
+# Bit 7 Value 128: Free to use
 #
 # Examples
 # -Simple Text
@@ -84,9 +100,25 @@
 # Text Line 2 = "'" # system.Date("%H:%M") # "'"
 # Flags = 14 = 8+4+2 = both lines centered, second line bold
 #
+# -Clear
+# string displayCmd = "JPDISEP750 /7 0 @c254 @c254 0"
+# Cell 7, clear Icon (0) and both text lines (@c00)
+#
 # =================================================
 
 load tclrega.so
+
+# Globals, just for debugging
+
+# Submit to Display: 0 = no / 1 = yes
+# set gSubmit 0
+set gSubmit 1
+
+# Debugging: 0 = no / 1 = yes to gDebugFile
+set gDebug 0
+# set gDebug 1
+set gDebugFile "/media/usb1/debug75.log"
+
 
 # -------------------------------------
 proc main { argc argv } {
@@ -95,11 +127,16 @@ proc main { argc argv } {
 		return
 	}
 
+	debugLog "-<Start>----------------------------------------------------------------"
+
+	# Get Global
+	global gSubmit
+	debugLog "Submitting to Display: $gSubmit"
+
 	for { set i 0 }  { $i <= 18 }  { incr i } {
 		set DISPLAY($i) ""
 	}
 
-	debugLog "-<Start>----------------------------------------------------------------"
 	set SERIAL [lindex $argv 0]
 	debugLog "Serial: <$SERIAL>"
 
@@ -122,9 +159,12 @@ proc main { argc argv } {
 			set T1C [expr ($FLAGS >> 2) & 1]
 			set T2C [expr ($FLAGS >> 3) & 1]
 			set ICR [expr ($FLAGS >> 4) & 1]
-			debugLog "Flags T1B:$T1B  T2B:$T2B  T1C:$T1C  T2C:$T2C  ICR:$ICR"
-			
-			#Calculate Icon Position
+			set  B5 [expr ($FLAGS >> 5) & 1]
+			set  B6 [expr ($FLAGS >> 6) & 1]
+			set  B7 [expr ($FLAGS >> 7) & 1]
+			debugLog "Flags T1B:$T1B T2B:$T2B T1C:$T1C T2C:$T2C ICR:$ICR B5:$B5 B6:$B6 B7:$B7"
+
+			#Calculate Icon Position + possible Offset for right alignment
 			set iconDec [expr 128 + ($CELL -1) + ($ICR * 64)]
 			#...to Hex
 			set iconHex [format %x $iconDec]
@@ -144,20 +184,27 @@ proc main { argc argv } {
 			set text2Hex [format %x $text2Dec]
 			#Debug iconPosition
 			debugLog "Text2 Position Dec: $text2Dec / Hex: $text2Hex"
-									
+
 			#Process each display line
 			if { $CELL >= 1 && $CELL <= 18 && [string length $TEXT1] > 0 } {
 				#Reset CELL string
 				set txtOut ""
 				#Process Icon
-				if { $ICON >= 1 && $ICON <= 50 } {
-					append txtOut "0x18,"
-					append txtOut "0x$iconHex,"
-					set iconDec [expr 127 + $ICON]
-					set iconHex [format %x $iconDec]
-					append txtOut "0x$iconHex,"
+				append txtOut "0x18,"
+				append txtOut "0x$iconHex,"
+				if { $ICON == 0 } {
+					# Icon No. 0 => Dec 254 => 0xFE => MSG_CLR_KEY
+					set iconDec 254
+					debugLog "Found Icon No.0 => add 0xFE => MSG_CLR_KEY/Clear Icon"
 				}
-				
+				if { $ICON >= 1 } {
+					# Icon No. > 0 = Regular Icons
+					set iconDec [expr 127 + $ICON]
+					debugLog "Found Icon No. $ICON => $iconDec => 0x$iconHex"
+				} 
+				set iconHex [format %x $iconDec]
+				append txtOut "0x$iconHex,"
+
 				# Text 1
 				# fixed or variable text, can be combined in one line
 				# Bold or Normal
@@ -175,22 +222,34 @@ proc main { argc argv } {
 				  #check for fixed text code @txx, 2 digits required!
 				  #pass thru all other @yxx codes!
 					#@ = AscII 64
-					if { ($numDec == 64) && ($nextchar == "t") } {
-					  debugLog "Found FixText @t"
+					if { ($numDec == 64) && (($nextchar == "t") || ($nextchar == "c")) } {
+					  debugLog "T1: Found @ (Special)"
 					  set numberStr [string range $TEXT1 [expr $n + 2] [expr $n + 3]]
-						debugLog "Found FixText numberStr: $numberStr"
+						debugLog "T1: Found Special numberStr: $numberStr"
 						if { [string length $numberStr] == 2 } {
 							#this scan here is required to extract numbers like 08 or 09 correctly, otherwise the number is treated as octal which will result in errors
 							scan $numberStr "%d" number
-							debugLog "Found FixText Number: $number"
-							if { ($nextchar == "t") && ($number >= 1) && ($number <= 32) } {
-								#@t01..@t32
-								set textDec [expr 127 + $number]
-								set textHex [format %x $textDec]
-								append txtOut "0x$textHex,"
-								incr n 3
-								continue
+							debugLog "T1: Found @ Number: $number"
+							switch ($nextchar) {
+								"t" {
+									if { ($number >= 1) && ($number <= 32) } {
+										#@t01..@t32
+										set textDec [expr 127 + $number]
+										set textHex [format %x $textDec]
+										append txtOut "0x$textHex,"
+										debugLog "T1: Found FixText Number: $number => $textDec => 0x$textHex"
+									}
+								}
+								"c" {
+									if {$number == 0} {
+										#@c00 => 0xFE => MSG_CLR_KEY
+										append txtOut "0xfe,"
+										debugLog "T1: Found @c00, add 0xFE => MSG_CLR_KEY/Clear Text"
+									}
+								}
 							}
+							incr n 3
+							continue
 						}
 					}
 					#variable text, hex 30..5A, 61..7A
@@ -219,22 +278,34 @@ proc main { argc argv } {
 					#check for fixed text code @txx, 2 digits required!
 					#pass thru all other @yxx codes!
 					#@ = AscII 64
-					if { ($numDec == 64) && ($nextchar == "t") } {
-						debugLog "Found FixText @t"
+					if { ($numDec == 64) && (($nextchar == "t") || ($nextchar == "c")) } {
+						debugLog "T2: Found @ (Special)"
 						set numberStr [string range $TEXT2 [expr $n + 2] [expr $n + 3]]
-						debugLog "Found FixText numberStr: $numberStr"
+						debugLog "T2: Found Special numberStr: $numberStr"
 						if { [string length $numberStr] == 2 } {
 							#this scan here is required to extract numbers like 08 or 09 correctly, otherwise the number is treated as octal which will result in errors
 							scan $numberStr "%d" number
-							debugLog "Found FixText Number: $number"
-							if { ($nextchar == "t") && ($number >= 1) && ($number <= 32) } {
-								#@t01..@t32
-								set textDec [expr 127 + $number]
-								set textHex [format %x $textDec]
-								append txtOut "0x$textHex,"
-								incr n 3
-								continue
+							debugLog "T2: Found @ Number: $number"
+							switch ($nextchar) {
+								"t" {
+									if { ($number >= 1) && ($number <= 32) } {
+										#@t01..@t32
+										set textDec [expr 127 + $number]
+										set textHex [format %x $textDec]
+										append txtOut "0x$textHex,"
+										debugLog "T2: Found FixText Number: $number => $textDec => 0x$textHex"
+									}
+								}
+								"c" {
+									if {$number == 0} {
+										#@c00 => 0xFE => MSG_CLR_KEY
+										append txtOut "0xfe,"
+										debugLog "T2: Found @c00, add 0xFE => MSG_CLR_KEY/Clear Text"
+									}
+								}
 							}
+							incr n 3
+							continue
 						}
 					}
 					#variable text, hex 30..5A, 61..7A
@@ -251,8 +322,6 @@ proc main { argc argv } {
 		}
 		incr i
 	}
-	debugLog "------------------------------------------------------------------------"
-	
 	#Build complete Display Command
 	#Add Command Start
 	set displayCmd "0x02,"
@@ -264,14 +333,17 @@ proc main { argc argv } {
 	#Add Command End
 	append displayCmd "0x03"
 
+	debugLog "-<Hex Code>-------------------------------------------------------------"
 	#Debug Display Command
 	debugLog $displayCmd
 	debugLog "-<End>------------------------------------------------------------------"
 
 	#Process Rega Command
-	set rega_cmd ""
-	append rega_cmd "dom.GetObject('BidCos-RF.$SERIAL:9.SUBMIT').State('$displayCmd');"
-	array set regaRet [rega_script $rega_cmd]
+	if ($gSubmit) {
+		set rega_cmd ""
+		append rega_cmd "dom.GetObject('BidCos-RF.$SERIAL:9.SUBMIT').State('$displayCmd');"
+		array set regaRet [rega_script $rega_cmd]
+	}
 
 }
 
@@ -309,9 +381,14 @@ proc encodeSpecialChar { numHex } {
 
 # -------------------------------------
 proc debugLog { text } {
-	#set fileId [open "/media/usb1/debug75.log" "a+"]
-	#puts $fileId $text
-	#close $fileId
+	# Get Globals
+	global gDebug
+	global gDebugFile
+	if ($gDebug) {
+		set	fileId [open $gDebugFile "a+"]
+		puts $fileId $text
+		close $fileId
+	}
 }
 
 main $argc $argv
