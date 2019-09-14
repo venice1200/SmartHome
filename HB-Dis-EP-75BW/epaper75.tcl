@@ -230,7 +230,7 @@ proc main { argc argv } {
 							#this scan here is required to extract numbers like 08 or 09 correctly, otherwise the number is treated as octal which will result in errors
 							scan $numberStr "%d" number
 							debugLog "T1: Found @ Number: $number"
-							switch ($nextchar) {
+							switch $nextchar {
 								"t" {
 									if { ($number >= 1) && ($number <= 32) } {
 										#@t01..@t32
@@ -286,7 +286,7 @@ proc main { argc argv } {
 							#this scan here is required to extract numbers like 08 or 09 correctly, otherwise the number is treated as octal which will result in errors
 							scan $numberStr "%d" number
 							debugLog "T2: Found @ Number: $number"
-							switch ($nextchar) {
+							switch $nextchar {
 								"t" {
 									if { ($number >= 1) && ($number <= 32) } {
 										#@t01..@t32
