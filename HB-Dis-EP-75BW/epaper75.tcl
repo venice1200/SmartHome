@@ -2,7 +2,7 @@
 #
 # =================================================
 # epaper75.tcl, HB-Dis-EP-75BW script helper 
-# Version 0.13
+# Version 0.14
 # 2019-09-11 lame (Creative Commons)
 # https://creativecommons.org/licenses/by-nc-sa/4.0/
 # You are free to Share & Adapt under the following terms:
@@ -50,19 +50,20 @@
 #         !! If you set the Icon to 0 an existing icon we be cleared
 #
 # text1 : Line 1 possible mix with fixtext
-#         !! Needs to be set at least with ' ' (one space)
+#         !! Needs to be set at least with ' ' (one space) or @c00 (empty line)
 #         !! Text with spaces needs to be between '' like 'text space'
 #
 # text2 : Line 2 possible mix with fixtext
-#         !! Needs to be set at least with ' ' (one space)
+#         !! Needs to be set at least with ' ' (one space) or @c00 (empty line)
 #         !! Text with spaces needs to be between '' like 'space text'
 #
 # Specials:
-# -Fixtexts @t:
+# -Fixtexts @t[NUM]:
 # Add @t01..@t32 within the text for adding fixtexts 1..32 defined at device settings
 #
-# -Commands @c:
+# -Commands @c[NUM]:
 # Use @c00 as Text and existing Text Line will be cleared (see last example)
+# Use @c01 as Text and a Slash (0x2f) will be added
 #
 # Flags: Decimal value containing bits for bold & centererd text and right aligned icon
 #         !! Flags needs to be set at least with the 0 value
@@ -100,9 +101,16 @@
 # Text Line 2 = "'" # system.Date("%H:%M") # "'"
 # Flags = 14 = 8+4+2 = both lines centered, second line bold
 #
-# -Clear
+# -Clearing
 # string displayCmd = "JPDISEP750 /7 0 @c00 @c00 0"
 # Cell 7, clear Icon (0) and both text lines (@c00)
+#
+# -Show "/" (Slash)
+# string displayCmd = "JPDISEP750 /10 15 Temp@c01Humi 12.3°C@c0145% 0"
+# Cell 10 with Icon No.15
+# Text Line 1 = Temp/Humi
+# Text Line 2 = 12.3°C/45%
+# Flags = 0, Icon and both Texts left sided, nothing bold
 #
 # =================================================
 
@@ -165,11 +173,11 @@ proc main { argc argv } {
 			debugLog "Flags T1B:$T1B T2B:$T2B T1C:$T1C T2C:$T2C ICR:$ICR B5:$B5 B6:$B6 B7:$B7"
 
 			#Calculate Icon Position + possible Offset for right alignment
-			set iconDec [expr 128 + ($CELL -1) + ($ICR * 64)]
+			set iconPosDec [expr 128 + ($CELL -1) + ($ICR * 64)]
 			#...to Hex
-			set iconHex [format %x $iconDec]
+			set iconPosHex [format %x $iconPosDec]
 			#Debug iconPosition
-			debugLog "Icon Position  Dec: $iconDec / Hex: $iconHex"
+			debugLog "Icon Position  Dec: $iconPosDec / Hex: $iconPosHex"
 			
 			#Calculate Text 1 Position + possible Offset for Text Center Mode
 			set text1Dec [expr 128 + (($CELL -1) *2) + ($T1C * 64)]
@@ -189,23 +197,25 @@ proc main { argc argv } {
 			if { $CELL >= 1 && $CELL <= 18 && [string length $TEXT1] > 0 } {
 				#Reset CELL string
 				set txtOut ""
-				#Process Icon
+				#Process Icon 0x18
 				append txtOut "0x18,"
-				append txtOut "0x$iconHex,"
+				#Position & Left/Right ?
+				append txtOut "0x$iconPosHex,"
+				#Icon No.
 				if { $ICON == 0 } {
 					# Icon No. 0 => Dec 254 => 0xFE => MSG_CLR_KEY
 					set iconDec 254
-					debugLog "Found Icon No.0 => add 0xFE => MSG_CLR_KEY/Clear Icon"
+					debugLog "Found Icon No.0 => MSG_CLR_KEY/Clear Icon"
 				}
 				if { $ICON >= 1 } {
 					# Icon No. > 0 = Regular Icons
 					set iconDec [expr 127 + $ICON]
-					debugLog "Found Icon No. $ICON => $iconDec => 0x$iconHex"
-				} 
+				}
 				set iconHex [format %x $iconDec]
+				debugLog "Found Icon No.$ICON => $iconDec => 0x$iconHex"
 				append txtOut "0x$iconHex,"
 
-				# Text 1
+				# Text 1 0x11/0x12
 				# fixed or variable text, can be combined in one line
 				# Bold or Normal
 				if { $T1B == 0 } {
@@ -230,6 +240,7 @@ proc main { argc argv } {
 							#this scan here is required to extract numbers like 08 or 09 correctly, otherwise the number is treated as octal which will result in errors
 							scan $numberStr "%d" number
 							debugLog "T1: Found @ Number: $number"
+							debugLog "T1: Found nextchar: $nextchar"
 							switch $nextchar {
 								"t" {
 									if { ($number >= 1) && ($number <= 32) } {
@@ -241,10 +252,17 @@ proc main { argc argv } {
 									}
 								}
 								"c" {
-									if {$number == 0} {
-										#@c00 => 0xFE => MSG_CLR_KEY
-										append txtOut "0xfe,"
-										debugLog "T1: Found @c00, add 0xFE => MSG_CLR_KEY/Clear Text"
+									switch $number {
+										"0" {
+											#@c00 => 0xFE => MSG_CLR_KEY
+											append txtOut "0xfe,"
+											debugLog "T2: Found @c00, add 0xFE => MSG_CLR_KEY/Clear Text"
+										}
+										"1" {
+											#@c01 => 0x2f => "/"
+											append txtOut "0x2f,"
+											debugLog "T2: Found @c01, add 0x2f (/)"
+										}
 									}
 								}
 							}
@@ -260,8 +278,8 @@ proc main { argc argv } {
 						append txtOut "0x[encodeSpecialChar $numHex],"
 					}
 				}
-				
-				# Text 2
+
+				# Text 2 0x11/0x12
 				# fixed or variable text, can be combined in one line
 				# Bold or Normal
 				if { $T2B == 0 } {
@@ -286,6 +304,7 @@ proc main { argc argv } {
 							#this scan here is required to extract numbers like 08 or 09 correctly, otherwise the number is treated as octal which will result in errors
 							scan $numberStr "%d" number
 							debugLog "T2: Found @ Number: $number"
+							debugLog "T2: Found nextchar: $nextchar"
 							switch $nextchar {
 								"t" {
 									if { ($number >= 1) && ($number <= 32) } {
@@ -297,10 +316,17 @@ proc main { argc argv } {
 									}
 								}
 								"c" {
-									if {$number == 0} {
-										#@c00 => 0xFE => MSG_CLR_KEY
-										append txtOut "0xfe,"
-										debugLog "T2: Found @c00, add 0xFE => MSG_CLR_KEY/Clear Text"
+									switch $number {
+										"0" {
+											#@c00 => 0xFE => MSG_CLR_KEY
+											append txtOut "0xfe,"
+											debugLog "T2: Found @c00, add 0xFE => MSG_CLR_KEY/Clear Text"
+										}
+										"1" {
+											#@c01 => 0x2f => "/"
+											append txtOut "0x2f,"
+											debugLog "T2: Found @c01, add 0x2f (/)"
+										}
 									}
 								}
 							}
@@ -348,6 +374,7 @@ proc main { argc argv } {
 }
 
 # -------------------------------------
+
 proc encodeSpecialChar { numHex } {
 	switch $numHex {
 
@@ -364,17 +391,18 @@ proc encodeSpecialChar { numHex } {
 	2e	{ return "2e" }		# .
 	b0	{ return "b0" }		# °
 	5f	{ return "5f" }		# _
-	c4	{ return "5b" }		# Ä
-	d6	{ return "23" }		# Ö
-	dc	{ return "24" }		# Ü
-	e4	{ return "7b" }		# ä
-	f6	{ return "7c" }		# ö
-	fc	{ return "7d" }		# ü
-	df	{ return "7e" }		# ß
+	c4	{ return "5b" }		# Ä = [
+	d6	{ return "23" }		# Ö = #
+	dc	{ return "24" }		# Ü = $
+	e4	{ return "7b" }		# ä = {
+	f6	{ return "7c" }		# ö = |
+	fc	{ return "7d" }		# ü = }
+	df	{ return "7e" }		# ß = ~
 
 		default {
-			#debugLog "Unknown: $numHex"
-			return "2E" 
+			#Unknown = "."
+			debugLog "Unknown: $numHex"
+			return "2E"
 		}
 	}
 }
