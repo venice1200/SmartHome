@@ -2,7 +2,7 @@
 #
 # =================================================
 # epaper75.tcl, HB-Dis-EP-75BW script helper 
-# Version 0.14
+# Version 0.15
 # 2019-09-11 lame (Creative Commons)
 # https://creativecommons.org/licenses/by-nc-sa/4.0/
 # You are free to Share & Adapt under the following terms:
@@ -14,9 +14,10 @@
 # Many many Thanks to Jérôme, Tom Major, pa-pa & the Community
 #
 # It'y my first TCL script (modification), please help me to make it better and easier
-# Tested with Raspberrymatic 3.47.15.20190831
+# Tested with Raspberrymatic 3.47.x
 #
-# The script need to be downloaded to /usr/local/addons on the CCU as the below CMD_EXEC command starts from there
+# The script needs to be downloaded to /usr/local/addons on the CCU as the below CMD_EXEC command starts from there
+# wget -O /usr/local/addons/epaper75.tcl https://raw.githubusercontent.com/venice1200/SmartHome/master/HB-Dis-EP-75BW/epaper75.tcl
 #
 # Debugging Options are on the Top of the Script
 # If you like to enable submitting to the display choose "gSubmit 1"
@@ -59,14 +60,15 @@
 #
 # Specials:
 # -Fixtexts @t[NUM]:
-# Add @t01..@t32 within the text for adding fixtexts 1..32 defined at device settings
+#  Add @t01..@t32 within the text for adding fixtexts 1..32 defined at device settings
 #
 # -Commands @c[NUM]:
-# Use @c00 as Text and existing Text Line will be cleared (see last example)
-# Use @c01 as Text and a Slash (0x2f) will be added
+#  Use @c00 as Text and existing Text Line will be cleared (see last example)
+#  Use @c01 as Text and a Slash (0x2f) will be added
 #
-# Flags: Decimal value containing bits for bold & centererd text and right aligned icon
-#         !! Flags needs to be set at least with the 0 value
+# Flags: 
+# Decimal value containing bits for bold & centererd text and right aligned icon
+# !! Flags needs to be set at least with the 0 value
 #
 # The Bits are standing for:
 # Bit 0 Value 1:   If set to 1 Text Line 1 = bold, if set to 0 text is normal
@@ -119,13 +121,13 @@ load tclrega.so
 # Globals, just for debugging
 
 # Submit to Display: 0 = no / 1 = yes
-# set gSubmit 0
+#set gSubmit 0
 set gSubmit 1
 
 # Debugging: 0 = no / 1 = yes to gDebugFile
 set gDebug 0
-# set gDebug 1
-set gDebugFile "/media/usb1/debug75.log"
+#set gDebug 1
+#set gDebugFile "/media/usb1/debug75.log"
 
 
 # -------------------------------------
@@ -137,7 +139,7 @@ proc main { argc argv } {
 
 	debugLog "-<Start>----------------------------------------------------------------"
 
-	# Get Global
+	# Get Globals
 	global gSubmit
 	debugLog "Submitting to Display: $gSubmit"
 
@@ -170,28 +172,29 @@ proc main { argc argv } {
 			set  B5 [expr ($FLAGS >> 5) & 1]
 			set  B6 [expr ($FLAGS >> 6) & 1]
 			set  B7 [expr ($FLAGS >> 7) & 1]
-			debugLog "Flags T1B:$T1B T2B:$T2B T1C:$T1C T2C:$T2C ICR:$ICR B5:$B5 B6:$B6 B7:$B7"
+			debugLog "Flags T1B:$T1B T2B:$T2B T1C:$T1C T2C:$T2C ICR:$ICR"
+			#debugLog "Flags T1B:$T1B T2B:$T2B T1C:$T1C T2C:$T2C ICR:$ICR B5:$B5 B6:$B6 B7:$B7"
 
 			#Calculate Icon Position + possible Offset for right alignment
 			set iconPosDec [expr 128 + ($CELL -1) + ($ICR * 64)]
 			#...to Hex
 			set iconPosHex [format %x $iconPosDec]
 			#Debug iconPosition
-			debugLog "Icon Position  Dec: $iconPosDec / Hex: $iconPosHex"
+			debugLog "Icon Position Dec: $iconPosDec / Hex: $iconPosHex"
 			
 			#Calculate Text 1 Position + possible Offset for Text Center Mode
 			set text1Dec [expr 128 + (($CELL -1) *2) + ($T1C * 64)]
 			#...to Hex
 			set text1Hex [format %x $text1Dec]
 			#Debug iconPosition
-			debugLog "Text1 Position Dec: $text1Dec / Hex: $text1Hex"
+			debugLog "Text 1 Position Dec: $text1Dec / Hex: $text1Hex"
 
 			#Calculate Text 2 Position + possible Offset for Text Center Mode
 			set text2Dec [expr 128 + (($CELL -1) *2 +1) + ($T2C * 64)]
 			#...to Hex
 			set text2Hex [format %x $text2Dec]
 			#Debug iconPosition
-			debugLog "Text2 Position Dec: $text2Dec / Hex: $text2Hex"
+			debugLog "Text 2 Position Dec: $text2Dec / Hex: $text2Hex"
 
 			#Process each display line
 			if { $CELL >= 1 && $CELL <= 18 && [string length $TEXT1] > 0 } {
@@ -223,61 +226,9 @@ proc main { argc argv } {
 				} else {
 					append txtOut "0x12,"
 				}
-      			append txtOut "0x$text1Hex,"
-				for { set n 0 } { $n < [string length $TEXT1] } { incr n } {
-				  set char [string index $TEXT1 $n]
-				  set nextchar [string index $TEXT1 [expr $n + 1]]
-				  scan $char "%c" numDec
-				  set numHex [format %x $numDec]
-				  #check for fixed text code @txx, 2 digits required!
-				  #pass thru all other @yxx codes!
-					#@ = AscII 64
-					if { ($numDec == 64) && (($nextchar == "t") || ($nextchar == "c")) } {
-					  debugLog "T1: Found @ (Special)"
-					  set numberStr [string range $TEXT1 [expr $n + 2] [expr $n + 3]]
-						debugLog "T1: Found Special numberStr: $numberStr"
-						if { [string length $numberStr] == 2 } {
-							#this scan here is required to extract numbers like 08 or 09 correctly, otherwise the number is treated as octal which will result in errors
-							scan $numberStr "%d" number
-							debugLog "T1: Found @ Number: $number"
-							debugLog "T1: Found nextchar: $nextchar"
-							switch $nextchar {
-								"t" {
-									if { ($number >= 1) && ($number <= 32) } {
-										#@t01..@t32
-										set textDec [expr 127 + $number]
-										set textHex [format %x $textDec]
-										append txtOut "0x$textHex,"
-										debugLog "T1: Found FixText Number: $number => $textDec => 0x$textHex"
-									}
-								}
-								"c" {
-									switch $number {
-										"0" {
-											#@c00 => 0xFE => MSG_CLR_KEY
-											append txtOut "0xfe,"
-											debugLog "T2: Found @c00, add 0xFE => MSG_CLR_KEY/Clear Text"
-										}
-										"1" {
-											#@c01 => 0x2f => "/"
-											append txtOut "0x2f,"
-											debugLog "T2: Found @c01, add 0x2f (/)"
-										}
-									}
-								}
-							}
-							incr n 3
-							continue
-						}
-					}
-					#variable text, hex 30..5A, 61..7A
-					if { ($numDec >= 48 && $numDec <= 90) ||
-					($numDec >= 97 && $numDec <= 122) } {
-						append txtOut "0x$numHex,"
-					} else {
-						append txtOut "0x[encodeSpecialChar $numHex],"
-					}
-				}
+				append txtOut "0x$text1Hex,"
+				#Encode Text Line 1
+				append txtOut [encodeText $TEXT1 1]
 
 				# Text 2 0x11/0x12
 				# fixed or variable text, can be combined in one line
@@ -288,60 +239,9 @@ proc main { argc argv } {
 					append txtOut "0x12,"
 				}
 				append txtOut "0x$text2Hex,"
-				for { set n 0 } { $n < [string length $TEXT2] } { incr n } {
-					set char [string index $TEXT2 $n]
-					set nextchar [string index $TEXT2 [expr $n + 1]]
-					scan $char "%c" numDec
-					set numHex [format %x $numDec]
-					#check for fixed text code @txx, 2 digits required!
-					#pass thru all other @yxx codes!
-					#@ = AscII 64
-					if { ($numDec == 64) && (($nextchar == "t") || ($nextchar == "c")) } {
-						debugLog "T2: Found @ (Special)"
-						set numberStr [string range $TEXT2 [expr $n + 2] [expr $n + 3]]
-						debugLog "T2: Found Special numberStr: $numberStr"
-						if { [string length $numberStr] == 2 } {
-							#this scan here is required to extract numbers like 08 or 09 correctly, otherwise the number is treated as octal which will result in errors
-							scan $numberStr "%d" number
-							debugLog "T2: Found @ Number: $number"
-							debugLog "T2: Found nextchar: $nextchar"
-							switch $nextchar {
-								"t" {
-									if { ($number >= 1) && ($number <= 32) } {
-										#@t01..@t32
-										set textDec [expr 127 + $number]
-										set textHex [format %x $textDec]
-										append txtOut "0x$textHex,"
-										debugLog "T2: Found FixText Number: $number => $textDec => 0x$textHex"
-									}
-								}
-								"c" {
-									switch $number {
-										"0" {
-											#@c00 => 0xFE => MSG_CLR_KEY
-											append txtOut "0xfe,"
-											debugLog "T2: Found @c00, add 0xFE => MSG_CLR_KEY/Clear Text"
-										}
-										"1" {
-											#@c01 => 0x2f => "/"
-											append txtOut "0x2f,"
-											debugLog "T2: Found @c01, add 0x2f (/)"
-										}
-									}
-								}
-							}
-							incr n 3
-							continue
-						}
-					}
-					#variable text, hex 30..5A, 61..7A
-					if { ($numDec >= 48 && $numDec <= 90) ||
-						($numDec >= 97 && $numDec <= 122) } {
-						append txtOut "0x$numHex,"
-					} else {
-						append txtOut "0x[encodeSpecialChar $numHex],"
-					}
-				}
+				#Encode Text Line 2
+				append txtOut [encodeText $TEXT2 2]
+
 				#Store CELL String
 				set DISPLAY($CELL) $txtOut
 			}
@@ -373,7 +273,80 @@ proc main { argc argv } {
 
 }
 
-# -------------------------------------
+# ---- PROC's ---------------------------------
+
+# encodeText = Encode Text to Hex
+# TEXT = Text to be Hex'ed
+# LINE = Number of Processed line, only needed for debugging
+
+proc encodeText { TEXT LINE} {
+	for { set n 0 } { $n < [string length $TEXT] } { incr n } {
+		set char [string index $TEXT $n]
+		set nextchar [string index $TEXT [expr $n + 1]]
+		scan $char "%c" numDec
+		set numHex [format %x $numDec]
+		#check for fixed text code @txx, 2 digits required!
+		#pass thru all other @yxx codes!
+		#@ = AscII 64
+		if { ($numDec == 64) && (($nextchar == "t") || ($nextchar == "c")) } {
+			debugLog "Text $LINE: Found @ (Special)"
+			set numberStr [string range $TEXT [expr $n + 2] [expr $n + 3]]
+			debugLog "Text $LINE: Found Special numberStr: $numberStr"
+			if { [string length $numberStr] == 2 } {
+				#this scan here is required to extract numbers like 08 or 09 correctly, otherwise the number is treated as octal which will result in errors
+				scan $numberStr "%d" number
+				debugLog "Text $LINE: Found @ Number: $number"
+				debugLog "Text $LINE: Found NextChar: $nextchar"
+				switch $nextchar {
+					# t = FixText
+					"t" {
+						if { ($number < 1) || ($number > 32) } {
+							append txtOut "0x2e,"
+							debugLog "Text $LINE: @t Value out of Range, adding default Symbol (.)"
+						}
+						if { ($number >= 1) && ($number <= 32) } {
+							#@t01..@t32
+							set textDec [expr 127 + $number]
+							set textHex [format %x $textDec]
+							append txtOut "0x$textHex,"
+							debugLog "Text $LINE: Found FixText Number $number => $textDec => 0x$textHex"
+						}
+					}
+					# c = Command
+					"c" {
+						switch $number {
+							"0" {
+								#@c00 => 0xFE => MSG_CLR_KEY
+								append txtOut "0xfe,"
+								debugLog "Text $LINE: Found @c00, adding 0xFE => MSG_CLR_KEY/Clear Text"
+							}
+							"1" {
+								#@c01 => 0x2f => "/"
+								append txtOut "0x2f,"
+								debugLog "Text $LINE: Found @c01, adding 0x2f = (/)"
+							}
+							default {
+								append txtOut "0x2e,"
+								debugLog "Text $LINE: @c Value out of Range, adding default Symbol (.)"
+							}
+						}
+					}
+				}
+				incr n 3
+				continue
+			}
+		}
+		#variable text, hex 30..5A, 61..7A
+		if { ($numDec >= 48 && $numDec <= 90) ||
+			($numDec >= 97 && $numDec <= 122) } {
+			append txtOut "0x$numHex,"
+		} else {
+			append txtOut "0x[encodeSpecialChar $numHex],"
+		}
+	}
+	return $txtOut
+}
+
 
 proc encodeSpecialChar { numHex } {
 	switch $numHex {
@@ -401,8 +374,8 @@ proc encodeSpecialChar { numHex } {
 
 		default {
 			#Unknown = "."
-			debugLog "Unknown: $numHex"
-			return "2E"
+			debugLog "Unknown Special Char $numHex found, adding default Symbol (.)"
+			return "2e"
 		}
 	}
 }
