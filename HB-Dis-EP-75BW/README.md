@@ -13,8 +13,9 @@ Deshalb kann es durchaus passieren das was schief geht :-) falls falsche Werte �
 <br>
 Auszug aus dem Script:<br>
 ```
+# =================================================
 # epaper75.tcl, HB-Dis-EP-75BW script helper 
-# Version 0.13
+# Version 0.15
 # 2019-09-11 lame (Creative Commons)
 # https://creativecommons.org/licenses/by-nc-sa/4.0/
 # You are free to Share & Adapt under the following terms:
@@ -26,9 +27,10 @@ Auszug aus dem Script:<br>
 # Many many Thanks to Jérôme, Tom Major, pa-pa & the Community
 #
 # It'y my first TCL script (modification), please help me to make it better and easier
-# Tested with Raspberrymatic 3.47.15.20190831
+# Tested with Raspberrymatic 3.47.x
 #
-# The script need to be downloaded to /usr/local/addons on the CCU as the below CMD_EXEC command starts from there
+# The script needs to be downloaded to /usr/local/addons on the CCU as the below CMD_EXEC command starts from there
+# wget -O /usr/local/addons/epaper75.tcl https://raw.githubusercontent.com/venice1200/SmartHome/master/HB-Dis-EP-75BW/epaper75.tcl
 #
 # Debugging Options are on the Top of the Script
 # If you like to enable submitting to the display choose "gSubmit 1"
@@ -62,22 +64,24 @@ Auszug aus dem Script:<br>
 #         !! If you set the Icon to 0 an existing icon we be cleared
 #
 # text1 : Line 1 possible mix with fixtext
-#         !! Needs to be set at least with ' ' (one space)
+#         !! Needs to be set at least with ' ' (one space) or @c00 (empty line)
 #         !! Text with spaces needs to be between '' like 'text space'
 #
 # text2 : Line 2 possible mix with fixtext
-#         !! Needs to be set at least with ' ' (one space)
+#         !! Needs to be set at least with ' ' (one space) or @c00 (empty line)
 #         !! Text with spaces needs to be between '' like 'space text'
 #
 # Specials:
-# -Fixtexts @t:
-# Add @t01..@t32 within the text for adding fixtexts 1..32 defined at device settings
+# -Fixtexts @t[NUM]:
+#  Add @t01..@t32 within the text for adding fixtexts 1..32 defined at device settings
 #
-# -Commands @c:
-# Use @c00 as Text and existing Text Line will be cleared (see last example)
+# -Commands @c[NUM]:
+#  Use @c00 as Text and existing Text Line will be cleared (see last example)
+#  Use @c01 as Text and a Slash (0x2f) will be added
 #
-# Flags: Decimal value containing bits for bold & centererd text and right aligned icon
-#         !! Flags needs to be set at least with the 0 value
+# Flags: 
+# Decimal value containing bits for bold & centererd text and right aligned icon
+# !! Flags needs to be set at least with the 0 value
 #
 # The Bits are standing for:
 # Bit 0 Value 1:   If set to 1 Text Line 1 = bold, if set to 0 text is normal
@@ -112,8 +116,16 @@ Auszug aus dem Script:<br>
 # Text Line 2 = "'" # system.Date("%H:%M") # "'"
 # Flags = 14 = 8+4+2 = both lines centered, second line bold
 #
-# -Clear
+# -Clearing
 # string displayCmd = "JPDISEP750 /7 0 @c00 @c00 0"
 # Cell 7, clear Icon (0) and both text lines (@c00)
 #
+# -Show "/" (Slash)
+# string displayCmd = "JPDISEP750 /10 15 Temp@c01Humi 12.3°C@c0145% 0"
+# Cell 10 with Icon No.15
+# Text Line 1 = Temp/Humi
+# Text Line 2 = 12.3°C/45%
+# Flags = 0, Icon and both Texts left sided, nothing bold
+#
+# =================================================
 ```
