@@ -23,7 +23,7 @@
 # If you like to enable submitting to the display choose "gSubmit 1"
 # If you like to disable submitting to the display choose "gSubmit 0"
 #
-# If you like to disbale debugging choose "gDebug" 0
+# If you like to disable debugging choose "gDebug" 0
 # If you like to enable debugging to file "gDebugFile" choose "gDebug" 1
 #
 #
