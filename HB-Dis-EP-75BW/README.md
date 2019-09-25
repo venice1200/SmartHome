@@ -1,6 +1,8 @@
 ## Script Helper für Jérôme's 7.5" ePaper Display Projekt [HB-Dis-EP-75BW](https://github.com/jp112sdl/HB-Dis-EP-75BW)<br/>
-[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)
-
+[![License: CC BY-NC-SA 4.0](https://img.shields.io/badge/License-CC%20BY--NC--SA%204.0-lightgrey.svg)](https://creativecommons.org/licenses/by-nc-sa/4.0/)<br>
+<br>
+Based on [epaper42.tcl](https://github.com/TomMajor/SmartHome/tree/master/HB-Dis-EP-42BW/Script_Helper) by Tom Major 2019/05<br>
+<br>
 Mit dem Script Helper kann man aus HomeMatic Skripten heraus Texte an das Display senden.<br>
 <br>
 Installation:
