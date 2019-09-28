@@ -18,7 +18,7 @@ Auszug aus dem Script:<br>
 ```
 # =================================================
 # epaper75.tcl, HB-Dis-EP-75BW script helper 
-# Version 0.15
+# Version 0.16
 # 2019-09-11 lame (Creative Commons)
 # https://creativecommons.org/licenses/by-nc-sa/4.0/
 # You are free to Share & Adapt under the following terms:
@@ -32,16 +32,29 @@ Auszug aus dem Script:<br>
 # It'y my first TCL script (modification), please help me to make it better and easier
 # Tested with Raspberrymatic 3.47.x
 #
+# =================================================
+# History (startet with v0.15)
+# -------------------------------------------------
+# v0.15 (Added Options to clear things up)
+# Use Icon 0 to clear the Icon from Display
+# Use Text Special "@c00" as Text for Line 1 or 2 to clear Text Line 1 or 2 from Display
+# Added Debug and Logging Options
+#
+# v0.16 (Added Options Good for Duty Cycle)
+# Use Icon 99 to send no (Hex) Code to the Display
+# Use Text Special "@c02" as Text for Line 1 or 2 and no (Hex) Code is send to the Display
+#
+# =================================================
+#
 # The script needs to be downloaded to /usr/local/addons on the CCU as the below CMD_EXEC command starts from there
 # wget -O /usr/local/addons/epaper75.tcl https://raw.githubusercontent.com/venice1200/SmartHome/master/HB-Dis-EP-75BW/epaper75.tcl
 #
 # Debugging Options are on the Top of the Script
-# If you like to enable submitting to the display choose "gSubmit 1"
-# If you like to disable submitting to the display choose "gSubmit 0"
+# If you like to enable submitting data to the display choose "gSubmit 1"
+# If you like to disable submitting data to the display choose "gSubmit 0"
 #
-# If you like to disbale debugging choose "gDebug" 0
-# If you like to enable debugging to file "gDebugFile" choose "gDebug" 1
-#
+# If you like to disable debugging choose "gDebug 0"
+# If you like to enable debugging to file "gDebugFile" choose "gDebug 1"
 #
 # Put the Display Content in an Variable, here "displayCMD", and run the helper script with CUxD Exec to send the data to the Display
 # dom.GetObject("CUxD.CUX2801001:1.CMD_EXEC").State("tclsh /usr/local/addons/epaper75.tcl " # displayCmd);
@@ -62,16 +75,17 @@ Auszug aus dem Script:<br>
 #              |   6  |  12  |  18  |
 #              \--------------------/
 #
-# icon  : 1..30 as defined within Sketch
-#         !! Needs to be set at least with the 0 value
+# icon  : 0/1..30/99 as defined within Sketch
+#         !! Needs to be set at least with the 0 or 99 value
 #         !! If you set the Icon to 0 an existing icon we be cleared
+#         !! If you set the Icon to 99 nothing will be send to Display
 #
 # text1 : Line 1 possible mix with fixtext
-#         !! Needs to be set at least with ' ' (one space) or @c00 (empty line)
+#         !! Needs to be set at least with @c02 (nothing transmitted to display) or @c00 (clear line)
 #         !! Text with spaces needs to be between '' like 'text space'
 #
 # text2 : Line 2 possible mix with fixtext
-#         !! Needs to be set at least with ' ' (one space) or @c00 (empty line)
+#         !! Needs to be set at least with @c02 (nothing transmitted to display) or @c00 (clear line)
 #         !! Text with spaces needs to be between '' like 'space text'
 #
 # Specials:
@@ -79,18 +93,19 @@ Auszug aus dem Script:<br>
 #  Add @t01..@t32 within the text for adding fixtexts 1..32 defined at device settings
 #
 # -Commands @c[NUM]:
-#  Use @c00 as Text and existing Text Line will be cleared (see last example)
-#  Use @c01 as Text and a Slash (0x2f) will be added
+#  Use @c00 as Text and an existing Text Line will be cleared (see last example)
+#  Use @c01 as Text and a Slash "/" (0x2f) will be added
+#  Use @c02 as Text and no Text will be added/sent, good for Duty Cycle
 #
 # Flags: 
 # Decimal value containing bits for bold & centererd text and right aligned icon
 # !! Flags needs to be set at least with the 0 value
 #
 # The Bits are standing for:
-# Bit 0 Value 1:   If set to 1 Text Line 1 = bold, if set to 0 text is normal
-# Bit 1 Value 2:   If set to 1 Text Line 2 = bold, if set to 0 text is normal
-# Bit 2 Value 4:   If set to 1 Text Line 1 = centered, if set to 0 aligned like the icon
-# Bit 3 Value 8:   If set to 1 Text Line 2 = centered, if set to 0 aligned like the icon
+# Bit 0 Value  1:  If set to 1 Text Line 1 = bold, if set to 0 text is normal
+# Bit 1 Value  2:  If set to 1 Text Line 2 = bold, if set to 0 text is normal
+# Bit 2 Value  4:  If set to 1 Text Line 1 = centered, if set to 0 aligned like the icon
+# Bit 3 Value  8:  If set to 1 Text Line 2 = centered, if set to 0 aligned like the icon
 # Bit 4 Value 16:  If set to 1 Icon & Text right aligned, if set to 0 left aligned
 #
 # Bit 5 Value 32:  Free to use
@@ -106,14 +121,14 @@ Auszug aus dem Script:<br>
 # Flags = 0, Icon and both Texts left sided, nothing bold
 # 
 # -Mix of fixtext and simple text, centered and bold text
-# string displayCmd = "JPDISEP750 /8 30 @t31 'Text Feld 8' 30"
+# string displayCmd = "JPDISEP750 /8 30 @t31 'Text Field 8' 30"
 # Cell 8 with Icon No.30
 # Text Line 1 = @t31 (FixText No. 31) 
 # Text Line 2 = 'Text Feld 8' (Text with spaces so use '')
 # Flags = 30 = 16+8+4+2 = Icon on the right, both lines centered, second line bold
 #
 # -Show Time
-# string displayCmd = "JPDISEP750 /7 23 'Update Zeit' " # "'" # system.Date("%H:%M") # "'" # " 14";
+# string displayCmd = "JPDISEP750 /7 23 'Update Time' " # "'" # system.Date("%H:%M") # "'" # " 14";
 # Cell 7 with Icon No.23 (0x9c)
 # Text Line 1 = 'Update Zeit'
 # Text Line 2 = "'" # system.Date("%H:%M") # "'"
@@ -129,6 +144,12 @@ Auszug aus dem Script:<br>
 # Text Line 1 = Temp/Humi
 # Text Line 2 = 12.3°C/45%
 # Flags = 0, Icon and both Texts left sided, nothing bold
+#
+# -Send only Data for Text Line 2
+# string displayCmd = "JPDISEP750 /10 99 @c02 12.3°C@c0145% 0"
+# Cell 10 without Icon
+# Text Line 1 = No Text
+# Text Line 2 = 12.3°C/45%
 #
 # =================================================
 ```
