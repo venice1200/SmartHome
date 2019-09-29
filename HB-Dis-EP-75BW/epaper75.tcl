@@ -19,14 +19,16 @@
 # =================================================
 # History (startet with v0.15)
 # -------------------------------------------------
-# v0.15 (Added Options to clear things up)
+# v0.15 Added Options to clear things up
 # Use Icon 0 to clear the Icon from Display
 # Use Text Special "@c00" as Text for Line 1 or 2 to clear Text Line 1 or 2 from Display
 # Added Debug and Logging Options
 #
-# v0.16 (Added Options Good for Duty Cycle)
-# Use Icon 99 to send no (Hex) Code to the Display
+# v0.16 Added Options Good for Duty Cycle
+# Use Icon 99 and no Icon Code is send to the Display
 # Use Text Special "@c02" as Text for Line 1 or 2 and no (Hex) Code is send to the Display
+#
+# v0.17 Little more Debug Texts for Icon 99/Text @c02 functions
 #
 # =================================================
 #
@@ -147,8 +149,8 @@ set gSubmit 1
 
 # Debugging: 0 = no / 1 = yes to gDebugFile
 set gDebug 0
-#set gDebug 1
-#set gDebugFile "/media/usb1/debug75.log"
+# set gDebug 1
+# set gDebugFile "/media/usb1/debug75.log"
 
 
 # -------------------------------------
@@ -223,7 +225,9 @@ proc main { argc argv } {
 				set txtOut ""
 				# Process Icon Number
 				# If Icon = 99 add nothing here for Icon
-				if { $ICON != 99 } {
+				if { $ICON == 99 } {
+					debugLog "Found Icon No.99 adding nothing to the send string"
+				} else {
 					#Process Icon 0x18
 					append txtOut "0x18,"
 					#Position & Left/Right ?
@@ -244,7 +248,9 @@ proc main { argc argv } {
 				}
 				#Process Text 1
 				# If Text 1 = @c02 add nothing here for Text1
-				if { $TEXT1 != "@c02" } {
+				if { $TEXT1 == "@c02" } {
+					debugLog "Found @c02 for Text 1, adding nothing to the send string"
+				} else {
 					# Text 1 0x11/0x12
 					# fixed or variable text, can be combined in one line
 					# Bold or Normal
@@ -260,7 +266,9 @@ proc main { argc argv } {
 
 				#Process Text 2
 				# If Text 2 = @c02 add nothing here for Text2
-				if { $TEXT2 != "@c02" } {
+				if { $TEXT2 == "@c02" } {
+					debugLog "Found @c02 for Text 2, adding nothing to the send string"
+				} else {
 					# Text 2 0x11/0x12
 					# fixed or variable text, can be combined in one line
 					# Bold or Normal
@@ -378,6 +386,8 @@ proc encodeText { TEXT LINE} {
 	return $txtOut
 }
 
+# encodeSpecialChar = Encode Char to Hex
+# numHex = Char to be Hex'ed
 
 proc encodeSpecialChar { numHex } {
 	switch $numHex {
@@ -411,7 +421,9 @@ proc encodeSpecialChar { numHex } {
 	}
 }
 
-# -------------------------------------
+# debugLog = Write Debug Information to file
+# text = Text to be "Debugged"
+
 proc debugLog { text } {
 	# Get Globals
 	global gDebug
