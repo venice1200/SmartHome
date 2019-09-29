@@ -2,7 +2,7 @@
 #
 # =================================================
 # epaper75.tcl, HB-Dis-EP-75BW script helper 
-# Version 0.16
+# Version 0.17
 # 2019-09-11 lame (Creative Commons)
 # https://creativecommons.org/licenses/by-nc-sa/4.0/
 # You are free to Share & Adapt under the following terms:
