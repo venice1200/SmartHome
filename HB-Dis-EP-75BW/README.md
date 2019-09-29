@@ -18,7 +18,7 @@ Auszug aus dem Script:<br>
 ```
 # =================================================
 # epaper75.tcl, HB-Dis-EP-75BW script helper 
-# Version 0.16
+# Version 0.17
 # 2019-09-11 lame (Creative Commons)
 # https://creativecommons.org/licenses/by-nc-sa/4.0/
 # You are free to Share & Adapt under the following terms:
@@ -35,14 +35,16 @@ Auszug aus dem Script:<br>
 # =================================================
 # History (startet with v0.15)
 # -------------------------------------------------
-# v0.15 (Added Options to clear things up)
+# v0.15 Added Options to clear things up
 # Use Icon 0 to clear the Icon from Display
 # Use Text Special "@c00" as Text for Line 1 or 2 to clear Text Line 1 or 2 from Display
 # Added Debug and Logging Options
 #
-# v0.16 (Added Options Good for Duty Cycle)
-# Use Icon 99 to send no (Hex) Code to the Display
+# v0.16 Added Options Good for Duty Cycle
+# Use Icon 99 and no Icon Code is send to the Display
 # Use Text Special "@c02" as Text for Line 1 or 2 and no (Hex) Code is send to the Display
+#
+# v0.17 Little more Debug Texts for Icon 99/Text @c02 functions
 #
 # =================================================
 #
