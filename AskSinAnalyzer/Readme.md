@@ -1,7 +1,14 @@
+Da der OdroidGo die gleiche Hardware mitbringt wie für den AskSinAnalyzer benötigt wird   
+ist eine Sketch I/O-Anpassung relativ einfach.   
+Nur das OdroidGo Display wird ohne Reset betrieben.   
+   
 Pin Definition for AskSin Analyzer running on OdroidGo   
    
 See https://wiki.odroid.com/odroid_go/odroid_go#odroid-go_gpio_pin_mapping    
-and https://wiki.odroid.com/odroid_go/odroid_go#odroid-go_header_p2_description
+and https://wiki.odroid.com/odroid_go/odroid_go#odroid-go_header_p2_description   
+...
+OdroidGo Schematic   
+https://wiki.odroid.com/lib/exe/fetch.php?tok=5d7e2f&media=https%3A%2F%2Fgithub.com%2Fhardkernel%2FODROID-GO%2Fblob%2Fmaster%2FDocuments%2FODROID-GO_REV0.1_20180518.pdf   
    
 //Pin definitions for external switches
 #define START_WIFIMANAGER_PIN    27  // Button Select LOW = on boot: start wifimanager, on run: switch between tft screens   
