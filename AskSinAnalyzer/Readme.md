@@ -16,12 +16,12 @@ and https://wiki.odroid.com/odroid_go/odroid_go#odroid-go_header_p2_description
 //Pin definition for SD Card   
 #define SD_CS                    22   
    
-//Pin definitions for serial connection to AskSinSniffer   
+//Pin definitions for serial connection to Sniffer   
 #define EXTSERIALTX_PIN          15   
 #define EXTSERIALRX_PIN          4   
 #define EXTSERIALBAUDRATE        57600   
    
-#ifdef USE_DISPLAY
+//Pin definitions for Display   
 #define TFT_LED                 14   
 #define TFT_CS                   5   
 //#define TFT_RST                 26  // No ESP Pin for TFT Reset connected   
