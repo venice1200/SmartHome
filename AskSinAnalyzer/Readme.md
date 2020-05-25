@@ -1,4 +1,4 @@
-  See https://wiki.odroid.com/odroid_go/odroid_go#odroid-go_gpio_pin_mapping 
+  See https://wiki.odroid.com/odroid_go/odroid_go#odroid-go_gpio_pin_mapping    
   and https://wiki.odroid.com/odroid_go/odroid_go#odroid-go_header_p2_description
   
   //Pin definitions for external switches
