@@ -10,7 +10,7 @@ and https://wiki.odroid.com/odroid_go/odroid_go#odroid-go_header_p2_description
 #define ONLINE_MODE_PIN          13  // Button Menu   LOW = enable WIFI   
 #define RSSI_PEAK_HOLD_MODE_PIN  39  // Button Start  LOW = show peak line only for noisefloor, HIGH = show also for hm(ip) messages   
    
-//Pin definition for LED
+//Pin definition for LED   
 #define AP_MODE_LED_PIN          2  // Status LED   
    
 //Pin definition for SD Card   
